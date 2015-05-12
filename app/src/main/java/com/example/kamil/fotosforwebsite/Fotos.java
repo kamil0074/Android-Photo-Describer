@@ -12,8 +12,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FilenameFilter;
+import java.io.PrintWriter;
 
 
 public class Fotos extends ActionBarActivity {
@@ -80,7 +84,11 @@ public class Fotos extends ActionBarActivity {
                 fotoDirectory = PATH.substring(0,index);
                 Log.w("mam PATH",fotoDirectory);
                 try {
-                    fotos = new File(fotoDirectory).listFiles();
+                    fotos = new File(fotoDirectory).listFiles(new FilenameFilter() {
+                        public boolean accept(File dir, String name) {
+                            return !name.toLowerCase().endsWith(".txt");
+                        }
+                    });;
                 }catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -114,6 +122,25 @@ public class Fotos extends ActionBarActivity {
     public void nextFoto(View view)
     {
 
+        //TODO getting description
+        try {
+            TextView textField = (TextView) findViewById(R.id.editText);
+            String description = textField.getText().toString();
+            Log.d("Description", description);
+            textField.setText("");
+            //TODO creating text file
+            File describedFoto = fotos[aktualne];
+            String PATH = describedFoto.toString();
+            int index = PATH.lastIndexOf(".");
+            PrintWriter writer = new PrintWriter(PATH.substring(0, index)+".txt", "UTF-8");
+            writer.println(description);
+            writer.close();
+            Log.d("DescriptionPATH",PATH.substring(0, index)+".txt");
+
+        }catch (Exception e)
+        {
+            e.printStackTrace();
+        }
         aktualne++;
         aktualne%=fotos.length;
         try {
@@ -125,6 +152,19 @@ public class Fotos extends ActionBarActivity {
                 int nh = (int) (myBitmap.getHeight() * (512.0 / myBitmap.getWidth()));
                 Bitmap scaled = Bitmap.createScaledBitmap(myBitmap, 512, nh, true);
                 myImage.setImageBitmap(scaled);
+            }
+            File describedFoto = fotos[aktualne];
+            String PATH = describedFoto.toString();
+            int index = PATH.lastIndexOf(".");
+            File descriptionFile = new File(PATH.substring(0, index)+".txt");
+            if(descriptionFile.exists()) {
+                FileInputStream fis = new FileInputStream(descriptionFile);
+                byte[] data = new byte[(int) descriptionFile.length()];
+                fis.read(data);
+                fis.close();
+                String description = new String(data, "UTF-8");
+                TextView textField = (TextView) findViewById(R.id.editText);
+                textField.setText(description);
             }
         }catch (Exception e) {
             Log.e("Return File Exception",e.toString());
