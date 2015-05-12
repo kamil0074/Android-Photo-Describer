@@ -86,9 +86,9 @@ public class Fotos extends ActionBarActivity {
                 try {
                     fotos = new File(fotoDirectory).listFiles(new FilenameFilter() {
                         public boolean accept(File dir, String name) {
-                            return !name.toLowerCase().endsWith(".txt");
+                            return name.toLowerCase().endsWith(".jpg");
                         }
-                    });;
+                    });
                 }catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -121,28 +121,40 @@ public class Fotos extends ActionBarActivity {
     }
     public void nextFoto(View view)
     {
-
+        if(fotoDirectory.equals(""))
+        {
+            return;
+        }
         //TODO getting description
-        try {
-            TextView textField = (TextView) findViewById(R.id.editText);
-            String description = textField.getText().toString();
+        try
+        {
+            TextView textField=(TextView) findViewById(R.id.editText);
+            String description=textField.getText().toString();
             Log.d("Description", description);
             textField.setText("");
             //TODO creating text file
-            File describedFoto = fotos[aktualne];
-            String PATH = describedFoto.toString();
-            int index = PATH.lastIndexOf(".");
-            PrintWriter writer = new PrintWriter(PATH.substring(0, index)+".txt", "UTF-8");
+            File describedFoto=fotos[aktualne];
+            String PATH=describedFoto.toString();
+            int index=PATH.lastIndexOf(".");
+            PrintWriter writer=new PrintWriter(PATH.substring(0, index)+".txt", "UTF-8");
             writer.println(description);
             writer.close();
-            Log.d("DescriptionPATH",PATH.substring(0, index)+".txt");
+            Log.d("DescriptionPATH", PATH.substring(0, index)+".txt");
 
-        }catch (Exception e)
+        } catch(Exception e)
         {
             e.printStackTrace();
         }
-        aktualne++;
-        aktualne%=fotos.length;
+        if(view==findViewById(R.id.button2))
+        {
+            aktualne++;
+            aktualne%=fotos.length;
+        } else if(view==findViewById(R.id.button3))
+        {
+            aktualne--;
+            aktualne+=fotos.length;
+            aktualne%=fotos.length;
+        }
         try {
             File imgFile = new File(String.valueOf(fotos[aktualne]));
             Log.d("ShowedFile",fotos[aktualne].toString());
