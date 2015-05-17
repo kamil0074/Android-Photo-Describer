@@ -125,14 +125,14 @@ public class Fotos extends ActionBarActivity {
         {
             return;
         }
-        //TODO getting description
+        //getting description
         try
         {
             TextView textField=(TextView) findViewById(R.id.editText);
             String description=textField.getText().toString();
             Log.d("Description", description);
             textField.setText("");
-            //TODO creating text file
+            //creating text file
             File describedFoto=fotos[aktualne];
             String PATH=describedFoto.toString();
             int index=PATH.lastIndexOf(".");
