@@ -79,8 +79,10 @@ public class Fotos extends ActionBarActivity {
                 // The Intent's data Uri identifies which contact was selected.
                 Log.w("mam PATH","catch2");
                 Uri uri=data.getData();
+                Log.w("mam PATH","catch3");
                 String PATH=getRealPathFromURI(uri);
-                int index = PATH.lastIndexOf("/");
+				Log.w("mam PATH","catch4");
+				int index = PATH.lastIndexOf("/");
                 fotoDirectory = PATH.substring(0,index);
                 Log.w("mam PATH",fotoDirectory);
                 try {
