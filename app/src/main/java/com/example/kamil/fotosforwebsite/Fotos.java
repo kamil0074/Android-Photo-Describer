@@ -63,11 +63,11 @@ public class Fotos extends AppCompatActivity
 	public String getRealPathFromURI(Uri contentUri)
 	{
 		Log.w("getRealPathFromURI","State1");
-		String[] proj={MediaStore.Images.Media.DATA};
+		String[] project={MediaStore.Images.Media.DATA};
 		Log.w("getRealPathFromURI","State2");
 		Log.w("contentUri",contentUri.toString());
 		//noinspection deprecation
-		android.database.Cursor cursor=managedQuery(contentUri,proj,     // Which columns to return
+		android.database.Cursor cursor=managedQuery(contentUri,project,     // Which columns to return
 				null,     // WHERE clause; which rows to return (all rows)
 				null,     // WHERE clause selection arguments (none)
 				null);     // Order-by clause (ascending by name)
@@ -215,9 +215,7 @@ public class Fotos extends AppCompatActivity
 	public void selectDirectory(View view)
 	{
 		Intent fileIntent=new Intent(Intent.ACTION_GET_CONTENT);
-		fileIntent.setType("file/*"); // intent type to filter application based on your
-		// requirement
-
+		fileIntent.setType("file/*"); // intent type to filter application based on your requirement
 		Intent intent=new Intent();
 		intent.setType("image/*");
 		intent.setAction(Intent.ACTION_GET_CONTENT);
