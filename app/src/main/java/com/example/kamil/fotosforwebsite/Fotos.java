@@ -3,6 +3,8 @@ package com.example.kamil.fotosforwebsite;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -77,7 +79,39 @@ public class Fotos extends AppCompatActivity
 		Log.w("getRealPathFromURI","State4");
 		return cursor.getString(column_index);
 	}
+	public Bitmap getRotatedBitmap(File imgFile)
+	{
+		Bitmap myBitmap=BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+		try
+		{
+			ExifInterface exif=new ExifInterface(imgFile.getAbsolutePath());
+			int orientation=exif.getAttributeInt(ExifInterface.TAG_ORIENTATION,1);
+			Matrix matrix=new Matrix();
+			Log.w("ROTATION","ROTATION START");
+			switch(orientation)
+			{
+				case 3:
+					matrix.postRotate(180);
+					myBitmap=Bitmap.createBitmap(myBitmap,0,0,myBitmap.getWidth(),myBitmap.getHeight(),matrix,true);
+					break;
+				case 6:
+					matrix.postRotate(90);
+					myBitmap=Bitmap.createBitmap(myBitmap,0,0,myBitmap.getWidth(),myBitmap.getHeight(),matrix,true);
+					break;
+				case 8:
+					matrix.postRotate(90);
+					myBitmap=Bitmap.createBitmap(myBitmap,0,0,myBitmap.getWidth(),myBitmap.getHeight(),matrix,true);
+					break;
 
+			}
+
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		return myBitmap;
+	}
 	@Override
 	protected void onActivityResult(int requestCode,int resultCode,Intent data)
 	{
@@ -88,7 +122,7 @@ public class Fotos extends AppCompatActivity
 			if(resultCode==RESULT_OK) // Make sure the request was successful
 			{
 				aktualne=0;
-				// The user picked a foto.
+				// The user picked a photo.
 				// The Intent's data Uri identifies which contact was selected.
 				Log.w("mam PATH","catch2");
 				Uri uri=data.getData();
@@ -128,7 +162,28 @@ public class Fotos extends AppCompatActivity
 					Log.d("ShowedFile",photos[aktualne].toString());
 					if(imgFile.exists())
 					{
-						Bitmap myBitmap=BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+						Bitmap myBitmap=getRotatedBitmap(imgFile);
+								/*BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+						ExifInterface exif = new ExifInterface(imgFile.getAbsolutePath());
+						int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 1);
+						Matrix matrix = new Matrix();
+						Log.w("ROTATION","ROTATION START");
+						switch(orientation)
+						{
+							case 3:
+								matrix.postRotate(180);
+								myBitmap= Bitmap.createBitmap(myBitmap, 0, 0, myBitmap.getWidth(), myBitmap.getHeight(), matrix, true);
+						        break;
+							case 6:
+								matrix.postRotate(90);
+								myBitmap= Bitmap.createBitmap(myBitmap, 0, 0, myBitmap.getWidth(), myBitmap.getHeight(), matrix, true);
+								break;
+							case 8:
+								matrix.postRotate(90);
+								myBitmap= Bitmap.createBitmap(myBitmap, 0, 0, myBitmap.getWidth(), myBitmap.getHeight(), matrix, true);
+								break;
+
+						}*/
 						ImageView myImage=(ImageView)findViewById(R.id.imageView);
 						int nh=(int)(myBitmap.getHeight()*(512.0/myBitmap.getWidth()));
 						Bitmap scaled=Bitmap.createScaledBitmap(myBitmap,512,nh,true);
@@ -142,7 +197,7 @@ public class Fotos extends AppCompatActivity
 		}
 	}
 
-	public void nextFoto(View view)
+	public void nextPhoto(View view)
 	{
 		if(photoDirectory.equals(""))
 		{
@@ -185,7 +240,7 @@ public class Fotos extends AppCompatActivity
 			Log.d("ShowedFile",photos[aktualne].toString());
 			if(imgFile.exists())
 			{
-				Bitmap myBitmap=BitmapFactory.decodeFile(imgFile.getAbsolutePath());
+				Bitmap myBitmap=getRotatedBitmap(imgFile);//BitmapFactory.decodeFile(imgFile.getAbsolutePath());
 				ImageView myImage=(ImageView)findViewById(R.id.imageView);
 				int nh=(int)(myBitmap.getHeight()*(512.0/myBitmap.getWidth()));
 				Bitmap scaled=Bitmap.createScaledBitmap(myBitmap,512,nh,true);
