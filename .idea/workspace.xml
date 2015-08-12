@@ -1973,7 +1973,13 @@
       <option name="project" value="LOCAL" />
       <updated>1439405128938</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Rotation Added&#10;">
+      <created>1439405134885</created>
+      <option name="number" value="00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1439405134885</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TodoView">
