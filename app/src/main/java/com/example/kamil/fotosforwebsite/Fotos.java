@@ -18,7 +18,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.PrintWriter;
-
+import java.util.Arrays;
+import java.util.Comparator;
 //import android.support.v7.app.ActionBarActivity;
 //import android.view.Menu;
 //import android.view.MenuItem;
@@ -29,31 +30,8 @@ public class Fotos extends AppCompatActivity
 
 	public String photoDirectory="";
 
-
-	/*    @Override
-		public boolean onCreateOptionsMenu(Menu menu) {
-			// Inflate the menu; this adds items to the action bar if it is present.
-			getMenuInflater().inflate(R.menu.menu_fotos,menu);
-			return true;
-		}
-
-		@Override
-		public boolean onOptionsItemSelected(MenuItem item) {
-			// Handle action bar item clicks here. The action bar will
-			// automatically handle clicks on the Home/Up button, so long
-			// as you specify a parent activity in AndroidManifest.xml.
-			int id = item.getItemId();
-
-			//noinspection SimplifiableIfStatement
-			if (id == R.id.action_settings) {
-				return true;
-			}
-
-			return super.onOptionsItemSelected(item);
-		}
-	*/
 	public File photos[];
-	public int aktualne=0;
+	public int current=0;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -121,7 +99,7 @@ public class Fotos extends AppCompatActivity
 		{
 			if(resultCode==RESULT_OK) // Make sure the request was successful
 			{
-				aktualne=0;
+				current=0;
 				// The user picked a photo.
 				// The Intent's data Uri identifies which contact was selected.
 				Log.w("mam PATH","catch2");
@@ -141,6 +119,13 @@ public class Fotos extends AppCompatActivity
 							return name.toLowerCase().endsWith(".jpg");
 						}
 					});
+					Arrays.sort(photos,new Comparator<File>(){
+						@Override
+						public int compare(File lhs,File rhs)
+						{
+							return lhs.getName().compareTo(rhs.getName());
+						}
+					});
 				}catch(Exception e)
 				{
 					e.printStackTrace();
@@ -158,8 +143,8 @@ public class Fotos extends AppCompatActivity
 				//i.setImageResource();
 				try
 				{
-					File imgFile=new File(String.valueOf(photos[aktualne]));
-					Log.d("ShowedFile",photos[aktualne].toString());
+					File imgFile=new File(String.valueOf(photos[current]));
+					Log.d("ShowedFile",photos[current].toString());
 					if(imgFile.exists())
 					{
 						Bitmap myBitmap=getRotatedBitmap(imgFile);
@@ -211,7 +196,7 @@ public class Fotos extends AppCompatActivity
 			Log.d("Description",description);
 			textField.setText("");
 			//creating text file
-			File describedPhoto=photos[aktualne];
+			File describedPhoto=photos[current];
 			String PATH=describedPhoto.toString();
 			int index=PATH.lastIndexOf(".");
 			PrintWriter writer=new PrintWriter(PATH.substring(0,index)+".txt","UTF-8");
@@ -225,19 +210,19 @@ public class Fotos extends AppCompatActivity
 		}
 		if(view==findViewById(R.id.button2))
 		{
-			aktualne++;
-			aktualne%=photos.length;
+			current++;
+			current%=photos.length;
 		}
 		else if(view==findViewById(R.id.button3))
 		{
-			aktualne--;
-			aktualne+=photos.length;
-			aktualne%=photos.length;
+			current--;
+			current+=photos.length;
+			current%=photos.length;
 		}
 		try
 		{
-			File imgFile=new File(String.valueOf(photos[aktualne]));
-			Log.d("ShowedFile",photos[aktualne].toString());
+			File imgFile=new File(String.valueOf(photos[current]));
+			Log.d("ShowedFile",photos[current].toString());
 			if(imgFile.exists())
 			{
 				Bitmap myBitmap=getRotatedBitmap(imgFile);//BitmapFactory.decodeFile(imgFile.getAbsolutePath());
@@ -246,7 +231,7 @@ public class Fotos extends AppCompatActivity
 				Bitmap scaled=Bitmap.createScaledBitmap(myBitmap,512,nh,true);
 				myImage.setImageBitmap(scaled);
 			}
-			File describedPhoto=photos[aktualne];
+			File describedPhoto=photos[current];
 			String PATH=describedPhoto.toString();
 			int index=PATH.lastIndexOf(".");
 			File descriptionFile=new File(PATH.substring(0,index)+".txt");
