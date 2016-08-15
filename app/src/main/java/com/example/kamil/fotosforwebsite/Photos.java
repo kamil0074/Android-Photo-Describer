@@ -1,5 +1,5 @@
 package com.example.kamil.fotosforwebsite;
-
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -8,9 +8,7 @@ import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -26,12 +24,15 @@ import java.util.Arrays;
 import java.util.Comparator;
 
 
-public class Fotos extends AppCompatActivity
+public class Photos extends AppCompatActivity
 {
-	private String photoDirectory="";
+	private static final String TAG="Photos";
+	private File photoDirectory;
 	private File[] photos;
 	private int current;
-
+	private final static int REQUEST_IMAGES_DIRECTORY=1;
+	private final static int REQUEST_IMAGES_FILE=2;
+	private final static String LAST_DIRECTORY_PREFERENCE="LAST_OPENED";
 	private static Bitmap getRotatedBitmap(final File imgFile)
 	{
 		Bitmap myBitmap=BitmapFactory.decodeFile(imgFile.getAbsolutePath());
@@ -62,6 +63,8 @@ public class Fotos extends AppCompatActivity
 		return myBitmap;
 	}
 
+
+
 	@Override
 	protected void onCreate(final Bundle savedInstanceState)
 	{
@@ -69,35 +72,56 @@ public class Fotos extends AppCompatActivity
 		setContentView(R.layout.activity_fotos);
 	}
 
-	private String getRealPathFromURI(final Uri contentUri)
+	@SuppressLint("NewApi")
+	private File getRealPathFromURI(final Uri contentUri)
 	{
-		final String[] project={MediaStore.MediaColumns.DATA};
+		final String[] project={"_data"};
 		try(Cursor cursor=getApplicationContext().getContentResolver()
 				.query(contentUri,project,     // Which columns to return
 				null,     // WHERE clause; which rows to return (all rows)
 				null,     // WHERE clause selection arguments (none)
 						null))
 		{
-			assert cursor!=null;
-			final int column_index=cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
-			cursor.moveToFirst();
-			return cursor.getString(column_index);
+			if(cursor==null)
+				throw new AssertionError("cursor is null");
+			final int column_index=cursor.getColumnIndexOrThrow("_data");
+			if(cursor.moveToFirst())
+			{
+				String extracted=cursor.getString(column_index);
+				final int index=extracted.lastIndexOf('/');
+				return new File(extracted.substring(0,index));
+			}
+			throw new AssertionError("Cannot move cursor");
 		}
 	}
 
+
+	@SuppressLint("NewApi")
 	@Override
 	protected void onActivityResult(final int requestCode,final int resultCode,final Intent data)
 	{
-		if(requestCode==0xDEAD)
+		switch(requestCode)
 		{
-			if(resultCode==RESULT_OK)
-			{
+			case REQUEST_IMAGES_DIRECTORY:
+			case REQUEST_IMAGES_FILE:
+				if(resultCode!=RESULT_OK)
+					return;
 				current=0;
 				final Uri uri=data.getData();
-				final String PATH=getRealPathFromURI(uri);
-				final int index=PATH.lastIndexOf('/');
-				photoDirectory=PATH.substring(0,index);
-				photos=new File(photoDirectory).listFiles(new FilenameFilter()
+				if(requestCode==REQUEST_IMAGES_DIRECTORY)
+					photoDirectory=new File(FileUtil.getFullPathFromTreeUri(uri,this));
+				else
+					photoDirectory=getRealPathFromURI(uri);
+				//	final String PATH=;
+			//	if(PATH==null)
+			//		throw new AssertionError("PATH is null");
+			//	Log.e(TAG,"ABC"+PATH+"DEF");
+			//	final int index=PATH.lastIndexOf('/');
+			//	photoDirectory=new File(PATH.substring(0,index));
+				//getPreferences(MODE_PRIVATE).edit().putString(LAST_DIRECTORY_PREFERENCE,photoDirectory).commit();
+			//	Log.e(TAG,"files:"+photoDirectory);
+			//	Log.e(TAG,"files:"+photoDirectory.listFiles());
+				photos=photoDirectory.listFiles(new FilenameFilter()
 				{
 					@Override
 					public boolean accept(final File dir,final String name)
@@ -113,8 +137,7 @@ public class Fotos extends AppCompatActivity
 						return lhs.getName().compareTo(rhs.getName());
 					}
 				});
-				final File imgFile=new File(String.valueOf(photos[current]));
-				Log.d("ShowedFile",photos[current].toString());
+				final File imgFile=photos[current];
 				if(imgFile.exists())
 				{
 					final Bitmap myBitmap=getRotatedBitmap(imgFile);
@@ -123,13 +146,33 @@ public class Fotos extends AppCompatActivity
 					final Bitmap scaled=Bitmap.createScaledBitmap(myBitmap,512,nh,true);
 					myImage.setImageBitmap(scaled);
 				}
-			}
+				final String PATH2=photos[current].toString();
+				final int index2=PATH2.lastIndexOf('.');
+				final File descriptionFile=new File(PATH2.substring(0,index2)+".txt");
+				if(descriptionFile.exists())
+				{
+					try(FileInputStream fis=new FileInputStream(descriptionFile))
+					{
+						final byte[] description=new byte[(int)descriptionFile.length()];
+						fis.read(description);
+						((TextView)findViewById(R.id.editText)).setText(
+								new String(description,"UTF-8"));
+					}catch(final IOException e)
+					{
+						e.printStackTrace();
+					}
+				}
+				return;
+			default:
+				super.onActivityResult(requestCode,resultCode,data);
 		}
+
 	}
 
+	@SuppressLint("NewApi")
 	public void nextPhoto(final View view)
 	{
-		if(photoDirectory.isEmpty())
+		if(photoDirectory==null)
 			return;
 		final String PATH=photos[current].toString();
 		final int index=PATH.lastIndexOf('.');
@@ -160,6 +203,7 @@ public class Fotos extends AppCompatActivity
 			final int nh=(int)(myBitmap.getHeight()*(512.0/myBitmap.getWidth()));
 			final Bitmap scaled=Bitmap.createScaledBitmap(myBitmap,512,nh,true);
 			((ImageView)findViewById(R.id.imageView)).setImageBitmap(scaled);
+
 		}
 		final String PATH2=photos[current].toString();
 		final int index2=PATH2.lastIndexOf('.');
@@ -180,9 +224,47 @@ public class Fotos extends AppCompatActivity
 
 	public void selectDirectory(@SuppressWarnings("UnusedParameters") final View ignored)
 	{
-		final Intent intent=new Intent(Intent.ACTION_GET_CONTENT);
-		intent.setType("image/*");
-		final int REQUEST_CODE=0xDEAD;
-		startActivityForResult(Intent.createChooser(intent,"Select Picture"),REQUEST_CODE);
+		/*if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.LOLLIPOP)
+		{
+			final Intent intent=new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+			startActivityForResult(Intent.createChooser(intent,"Select Picture"),
+					REQUEST_IMAGES_DIRECTORY);
+		}
+		else
+		{*/
+			final Intent intent=new Intent(Intent.ACTION_GET_CONTENT);
+			intent.setType("image/*");
+			startActivityForResult(Intent.createChooser(intent,"Select Picture"),
+					REQUEST_IMAGES_FILE);
+		//}
+			//String lastAccessed=getPreferences(MODE_PRIVATE).getString(LAST_DIRECTORY_PREFERENCE,null);
+		//
+		//if(lastAccessed!=null)
+		//	intent.setDataAndType(Uri.parse(lastAccessed),"image/*");
+
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
